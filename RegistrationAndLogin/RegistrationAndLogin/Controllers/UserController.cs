@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Web;
 using System.Web.Mvc;
+using System.Net;
 
 namespace RegistrationAndLogin.Controllers
 {
@@ -54,26 +56,21 @@ namespace RegistrationAndLogin.Controllers
                 }
                 //Send Email to user
                 SendVerificationLinkEmail(user.EmailID, user.ActivationCode.ToString());
-
+                message = "Registration successfully done.Account activation link " +
+                    "has been sent to your email id:" + user.EmailID;
+                Status = true;
                 #endregion
             }
             else
             {
                 message = "Invalid Request";
             }
-
-
-            //Passwod Hashing
-
-
+            ViewBag.Message = message;
+            ViewBag.Status = Status;
             return View(user);
         }
-
-        //Verify Email
-
-        //Verify Email Link
-
-        //Login
+        //verify account
+           //Login
 
         //Login POST
 
@@ -92,7 +89,37 @@ namespace RegistrationAndLogin.Controllers
         [NonAction]
         public void SendVerificationLinkEmail(string emailID,string activationCode)
         {
-           
+            var verifyUrl = "User/verifyAccount/" + activationCode;
+            var link = Request.Url.AbsolutePath.Replace(Request.Url.PathAndQuery, verifyUrl);
+            var fromEmail = new MailAddress("jenpatel6890@gmail.com","Dotnet Great");
+            var toEmail = new MailAddress(emailID);
+            var fromEmailPassword = "J@nkit8488"; // Replace with original password
+            string subject = "Your account is successfully created";
+
+            string body = "<br/><br/>We are excited to tell you taht your Dotnet Great account is" +
+                "successfully created.Please click on the below link to verify your account" +
+                "<br/><br/><a href='"+link+"'>"+link+"</a>";
+
+            var smtp = new SmtpClient
+            {
+                Host = "smtp.gmail.com",
+                Port = 587,
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(fromEmail.Address,fromEmailPassword)
+
+            };
+            using (var message = new MailMessage(fromEmail, toEmail)
+            {
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true
+            })
+                smtp.Send(message);
+
+
+
         }
     }
     
